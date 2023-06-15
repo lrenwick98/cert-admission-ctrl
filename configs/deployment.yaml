@@ -1,21 +1,21 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: admission-controller
+  name: admission-controller-ingress
   namespace: admission-namespace
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: admission-controller
+      app: admission-controller-ingress
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: admission-controller
+        app: admission-controller-ingress
     spec:
       containers:
-        - name: admission-controller
+        - name: admission-controller-ingress
           image: >-
             image-registry.openshift-image-registry.svc:5000/admission-namespace/admission-controller:latest
           ports:

@@ -32,8 +32,8 @@ spec:
               value: cas-issuer.jetstack.io
             - name: issuer-kind
               value: GoogleCASClusterIssuer
-      serviceAccountName: admission-sa
-      serviceAccount: admission-sa
+      serviceAccountName: admission-sa-ingress
+      serviceAccount: admission-sa-ingress
       volumes:
       - name: ingress-admission-webhook-tls
         secret: 

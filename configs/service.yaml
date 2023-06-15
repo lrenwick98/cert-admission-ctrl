@@ -7,7 +7,7 @@ metadata:
     service.beta.openshift.io/serving-cert-secret-name: ingress-admission-webhook-tls
 spec:
   selector:
-    app: admission-controller
+    app: admission-controller-ingress
   ports:
     - protocol: TCP
       port: 8443

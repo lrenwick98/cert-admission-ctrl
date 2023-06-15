@@ -16,7 +16,7 @@ webhooks:
   clientConfig:
     service:
       namespace: "admission-namespace"
-      name: "admission-controller"
+      name: "admission-controller-ingress"
       path: /mutate
       port: 8443
     caBundle:

@@ -4,7 +4,7 @@ metadata:
   name: admission-sa-rolebinding-ingress
 subjects:
   - kind: ServiceAccount
-    name: admission-sa
+    name: admission-sa-ingress
     namespace: admission-namespace
 roleRef:
   apiGroup: rbac.authorization.k8s.io

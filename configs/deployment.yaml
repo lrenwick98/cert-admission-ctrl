@@ -17,7 +17,7 @@ spec:
       containers:
         - name: admission-controller-ingress
           image: >-
-            image-registry.openshift-image-registry.svc:5000/admission-namespace/admission-controller:latest
+            image-registry.openshift-image-registry.svc:5000/admission-namespace/admission-controller-ingress:latest
           ports:
             - containerPort: 8443
               protocol: TCP

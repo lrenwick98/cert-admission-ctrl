@@ -4,12 +4,11 @@ Ingress admission controller which mutates and validates Ingress objects request
 - Annotations are mutated to reflect the environment variables set in deployment of server which are set up to point to the CAS issuer and cert-manager (These can be changed through changing environment variables within deployment to reflect the specific needs of the cluster)
 - User must first add Annotations and choose which termination type they want: edge or passthrough
 - Services within the namespace retrieved are checked against the Ingress object to ensure user is attaching the ingress to an existing running service
-- Further 
-
+- Further validation occurs in the form of checking for spec such as tls, hosts and secretName fields and values exist
 
 
 INSTRUCTION ON HOW TO DEPLOY:
 
 oc apply -f configs/ (run twice)
-oc new-build --name admission-controller --binary=true --strategy=docker -n admission-namespace
-oc start-build admission-controller --from-dir=. --follow -n admission-namespace# cert-admission-ctrl
+oc new-build --name admission-controller-ingress --binary=true --strategy=docker -n admission-namespace
+oc start-build admission-controller-ingress --from-dir=. --follow -n admission-namespace# cert-admission-ctrl

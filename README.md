@@ -6,9 +6,13 @@ Ingress admission controller which mutates and validates Ingress objects request
 - Services within the namespace retrieved are checked against the Ingress object to ensure user is attaching the ingress to an existing running service
 - Further validation occurs in the form of checking for spec such as tls, hosts and secretName fields and values exist
 
+![Alt text](images/Ingress-Diagram.drawio.png)
+
+Once the mutated and validated ingress object has the necessary annotations, cert-manager then picks this up and creates a CSR. This then points to the correct Google CAS issuer pool which returns a signed issued certificate in the form of a secret. This secret which has already been specified in the ingress object is then used to attach itself to the newly created route from the ingress and encrypt the route.
 
 INSTRUCTION ON HOW TO DEPLOY:
 
 oc apply -f configs/ (run twice)
 oc new-build --name admission-controller-ingress --binary=true --strategy=docker -n admission-namespace
 oc start-build admission-controller-ingress --from-dir=. --follow -n admission-namespace# cert-admission-ctrl
+

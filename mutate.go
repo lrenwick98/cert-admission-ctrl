@@ -68,7 +68,7 @@ func (srvstrc *myServerHandler) mutserve(w http.ResponseWriter, r *http.Request)
 	if obj.Spec.Rules != nil {
 
 		if obj.Spec.Rules[0].HTTP != nil {
-            // Create full host name variable to be used for patching/mutating
+// Create full host name variable to be used for patching/mutating
 			fullHostName := obj.Spec.Rules[0].HTTP.Paths[0].Backend.Service.Name + "-" + obj.Namespace + ".apps." + UrlSuffix.Spec.BaseDomain
 // JSON patching to execute if conditions aren't met
 			if obj.Spec.Rules[0].Host != fullHostName {
@@ -117,7 +117,7 @@ func (srvstrc *myServerHandler) mutserve(w http.ResponseWriter, r *http.Request)
 					Value: fullHostName})
 			}
 		}
-	}
+	}  
 // Encoding the built up the mutated response so it can be sent back to API server
 	patchBytes, err := json.Marshal(patchData)
 	if err != nil {

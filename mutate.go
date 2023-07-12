@@ -1,18 +1,14 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	admissionv1 "k8s.io/api/admission/v1"
 	v1 "k8s.io/api/admission/v1"
 	networking_v1 "k8s.io/api/networking/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
@@ -25,32 +21,20 @@ type patchOperation struct {
 
 var coreClient corev1.CoreV1Interface
 
+// Create mutate function which can be called from multiplexer in main.go
 func (srvstrc *myServerHandler) mutserve(w http.ResponseWriter, r *http.Request) {
-
-	config, err := GetConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	coreClientSet, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	coreClient := coreClientSet.CoreV1()
-
-	ctx := context.TODO()
 
 	timestampLog := Log()
 
 	var patchData []patchOperation
-
+	// Create structure for capturing and processing body captured from webhooks
 	var Body []byte
 	if r.Body != nil {
 		if data, err := ioutil.ReadAll(r.Body); err == nil {
 			Body = data
 		}
 	}
+	// Error handling for not capturing data
 	if len(Body) == 0 {
 		timestampLog.Errorf("Unable to retrieve body from API request")
 		http.Error(w, "Empty Body", http.StatusBadRequest)
@@ -64,7 +48,7 @@ func (srvstrc *myServerHandler) mutserve(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Error Unmarsheling the Body request", http.StatusBadRequest)
 		return
 	}
-
+	// Specifying Ingress object from data body
 	raw := arRequest.Request.Object.Raw
 	obj := networking_v1.Ingress{}
 
@@ -75,30 +59,18 @@ func (srvstrc *myServerHandler) mutserve(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	svcList, err := coreClient.Services(obj.Namespace).List(ctx, meta_v1.ListOptions{})
-	if err != nil {
-		timestampLog.Errorf("Service list hasn't been retrieved")
-	}
-
-	for _, services := range svcList.Items {
-
-		fmt.Print(services.ObjectMeta.Name)
-	}
-
 	arResponse := v1.AdmissionReview{
 		Response: &v1.AdmissionResponse{
 			UID: arRequest.Request.UID,
 		},
 	}
-
+// Conditional checks to ensure fields exist in Ingress object
 	if obj.Spec.Rules != nil {
 
 		if obj.Spec.Rules[0].HTTP != nil {
-
+            // Create full host name variable to be used for patching/mutating
 			fullHostName := obj.Spec.Rules[0].HTTP.Paths[0].Backend.Service.Name + "-" + obj.Namespace + ".apps." + UrlSuffix.Spec.BaseDomain
-
-			secretName := obj.Spec.Rules[0].HTTP.Paths[0].Backend.Service.Name + "-certificate"
-
+// JSON patching to execute if conditions aren't met
 			if obj.Spec.Rules[0].Host != fullHostName {
 				patchData = append(patchData, patchOperation{
 					Op:    "replace",
@@ -115,15 +87,9 @@ func (srvstrc *myServerHandler) mutserve(w http.ResponseWriter, r *http.Request)
 							Path:  "/spec/tls/0/hosts/0",
 							Value: fullHostName})
 					}
-
-					if obj.Spec.TLS[0].SecretName != secretName {
-						patchData = append(patchData, patchOperation{
-							Op:    "replace",
-							Path:  "/spec/tls/0/secretName",
-							Value: secretName})
-					}
 				}
 			}
+// More JSON patching for the necessary annotations to be mutated for cert-manager to pick up the Ingress object
 			if obj.ObjectMeta.Annotations != nil {
 				patchData = append(patchData, patchOperation{
 					Op:    "replace",
@@ -148,11 +114,11 @@ func (srvstrc *myServerHandler) mutserve(w http.ResponseWriter, r *http.Request)
 				patchData = append(patchData, patchOperation{
 					Op:    "replace",
 					Path:  "/metadata/annotations/" + "cert-manager.io~1common-name",
-					Value: UrlSuffix.Spec.BaseDomain})
+					Value: fullHostName})
 			}
 		}
 	}
-
+// Encoding the built up the mutated response so it can be sent back to API server
 	patchBytes, err := json.Marshal(patchData)
 	if err != nil {
 		timestampLog.Errorf("Can't encode response %v", err)
@@ -165,7 +131,7 @@ func (srvstrc *myServerHandler) mutserve(w http.ResponseWriter, r *http.Request)
 	arResponse.Response.Allowed = true
 	arResponse.Response.Patch = patchBytes
 	arResponse.Response.PatchType = &v1JSONPatch
-
+// More error handling
 	resp, err := json.Marshal(arResponse)
 	if err != nil {
 		timestampLog.Errorf("Can't encode response %v", err)

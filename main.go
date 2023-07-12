@@ -59,6 +59,7 @@ func GetConfig() (*rest.Config, error) {
 	return nil, err
 }
 
+// logging function call
 func Log() zap.SugaredLogger {
 
 	loggerConfig := zap.NewProductionConfig()
@@ -75,7 +76,7 @@ func Log() zap.SugaredLogger {
 }
 
 func main() {
-
+	// server up running timestamp logs of Go version and OS
 	timestampLog := Log()
 	timestampLog.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	timestampLog.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
@@ -83,7 +84,7 @@ func main() {
 	issuer = os.Getenv("issuer")
 	issuerKind = os.Getenv("issuer-kind")
 	issuerGroup = os.Getenv("issuer-group")
-
+	// ensures env variables are set within code so they can be appended later in mutate.go
 	if issuer == "" || issuerKind == "" || issuerGroup == "" {
 		timestampLog.Errorf("All environment variables are not set")
 		return
@@ -95,7 +96,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	// provides authentication into ocp clientset for webhook
 	ocpclientset, err := ocp_clientset.NewForConfig(config)
 	if err != nil {
 		log.Fatal(err)
@@ -105,12 +106,11 @@ func main() {
 
 	UrlSuffix, _ = ocpClient.DNSes().Get(ctx, "cluster", meta_v1.GetOptions{})
 
-	// check the Environment variable for User Define Placements
+	// check the environment variable for User Define Placements
 	certpem := "/opt/app-root/tls/tls.crt"
 	keypem := "/opt/app-root/tls/tls.key"
 	certs, err := tls.LoadX509KeyPair(certpem, keypem)
 	if err != nil {
-		//  glog.Errorf("Failed to load Certificate/Key Pair: %v", err)
 		timestampLog.Errorf("Failed to load Certificate/Key Pair: %v", err)
 	}
 
@@ -121,7 +121,7 @@ func main() {
 	}
 	// Setting 2 variable which are defined by an empty struct for each of the function depending on the URL path
 	// the http request is calling
-	// in our example we have 2 paths , one for the mutate and one for validate
+	// one for the mutate and one for validate
 	mu := myServerHandler{}
 	va := myServerHandler{}
 	mux := http.NewServeMux()

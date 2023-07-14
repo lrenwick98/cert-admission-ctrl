@@ -29,6 +29,7 @@ $ oc apply -f configs/ (run twice)
 The next part of getting started will consist of building your baked image so it can then be injected into the deployment.yaml so it can pull the image and the controller can be set up. The below command builds the image onto the local openshift registry so you will not need to make any changes to the deployment.yaml
 
 $ oc new-build --name admission-controller-ingress --binary=true --strategy=docker -n admission-namespace
+
 $ oc start-build admission-controller-ingress --from-dir=. --follow -n admission-namespace# cert-admission-ctrl
 
 It's worth noting you can build your image and push to an external registry if you wanted, you just need to adjust the image path in the deployment.yaml to reflect the new location of the baked image.
